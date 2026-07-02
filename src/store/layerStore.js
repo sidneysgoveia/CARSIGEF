@@ -1,8 +1,18 @@
 /**
  * layerStore.js
  * Estado reativo centralizado das camadas WFS.
- * Mithril observa mudanças via m.redraw() chamado pelos serviços.
+ *
+ * wfsType:
+ *   'geoserver' → CAR (GeoServer 2.0, usa typeNames + count + BBOX)
+ *   'i3geo'     → SIGEF (i3geo OGC, usa tema + UF + typeName + maxFeatures)
  */
+
+/** Lista de UFs disponíveis no SIGEF */
+export const UF_LIST = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO',
+  'MA','MT','MS','MG','PA','PB','PR','PE','PI',
+  'RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+]
 
 export const SOURCES = {
   CAR: {
@@ -22,11 +32,12 @@ export const SOURCES = {
 }
 
 export const LAYER_DEFINITIONS = [
-  // ── CAR ──────────────────────────────────────────────────────────────────
+  // ── CAR (GeoServer WFS 2.0) ───────────────────────────────────────────────
   {
     id: 'car-imovel',
     label: 'Imóveis Rurais',
     source: SOURCES.CAR,
+    wfsType: 'geoserver',
     typeName: 'sicar:CAR_VALIDADO_IMOVEL',
     geometryType: 'fill',
     color: '#22c55e',
@@ -42,6 +53,7 @@ export const LAYER_DEFINITIONS = [
     id: 'car-app',
     label: 'APP',
     source: SOURCES.CAR,
+    wfsType: 'geoserver',
     typeName: 'sicar:CAR_VALIDADO_APP',
     geometryType: 'fill',
     color: '#4ade80',
@@ -57,6 +69,7 @@ export const LAYER_DEFINITIONS = [
     id: 'car-reserva',
     label: 'Reserva Legal',
     source: SOURCES.CAR,
+    wfsType: 'geoserver',
     typeName: 'sicar:CAR_VALIDADO_RESERVA_LEGAL',
     geometryType: 'fill',
     color: '#86efac',
@@ -72,6 +85,7 @@ export const LAYER_DEFINITIONS = [
     id: 'car-uso-restrito',
     label: 'Uso Restrito',
     source: SOURCES.CAR,
+    wfsType: 'geoserver',
     typeName: 'sicar:CAR_VALIDADO_USO_RESTRITO',
     geometryType: 'fill',
     color: '#fbbf24',
@@ -87,6 +101,7 @@ export const LAYER_DEFINITIONS = [
     id: 'car-veg-nativa',
     label: 'Vegetação Nativa',
     source: SOURCES.CAR,
+    wfsType: 'geoserver',
     typeName: 'sicar:CAR_VALIDADO_VEG_NATIVA',
     geometryType: 'fill',
     color: '#34d399',
@@ -98,12 +113,16 @@ export const LAYER_DEFINITIONS = [
     error: null,
     featureCount: 0,
   },
-  // ── SIGEF ─────────────────────────────────────────────────────────────────
+
+  // ── SIGEF (i3geo WFS, parâmetro tema + UF) ────────────────────────────────
+  // URL base: /sigef-proxy?tema={tema}_{UF}&service=WFS&...
   {
-    id: 'sigef-certificada',
-    label: 'Parcelas Certificadas',
+    id: 'sigef-privados',
+    label: 'Imóveis Privados',
     source: SOURCES.SIGEF,
-    typeName: 'sigef:parcela_certificada',
+    wfsType: 'i3geo',
+    // tema + UF é montado em runtime: imoveiscertificados_privado_PA
+    tema: 'imoveiscertificados_privado',
     geometryType: 'fill',
     color: '#f59e0b',
     opacity: 0.4,
@@ -115,10 +134,11 @@ export const LAYER_DEFINITIONS = [
     featureCount: 0,
   },
   {
-    id: 'sigef-analise',
-    label: 'Parcelas em Análise',
+    id: 'sigef-publicos',
+    label: 'Imóveis Públicos',
     source: SOURCES.SIGEF,
-    typeName: 'sigef:parcela_em_analise',
+    wfsType: 'i3geo',
+    tema: 'imoveiscertificados_publico',
     geometryType: 'fill',
     color: '#fb923c',
     opacity: 0.4,
@@ -139,6 +159,12 @@ export const store = {
   sidebarOpen: true,
   currentZoom: 4,
   basemap: 'dark', // 'dark' | 'streets' | 'satellite'
+
+  /** UF selecionada para o SIGEF */
+  selectedUF: 'PA',
+
+  /** TypeNames disponíveis descobertos via GetCapabilities do CAR */
+  availableCARTypeNames: [],
 
   // ── Getters ──────────────────────────────────────────────────────────────
   getLayer(id) {
@@ -176,6 +202,27 @@ export const store = {
   setLayerFeatureCount(id, count) {
     const layer = this.getLayer(id)
     if (layer) layer.featureCount = count
+  },
+
+  /** Atualiza o typeName de uma camada CAR após descoberta via GetCapabilities */
+  updateLayerTypeName(id, typeName) {
+    const layer = this.getLayer(id)
+    if (layer) {
+      console.info(`[Store] TypeName atualizado: ${id} → ${typeName}`)
+      layer.typeName = typeName
+    }
+  },
+
+  /** Troca a UF do SIGEF e limpa contadores */
+  setUF(uf) {
+    this.selectedUF = uf
+    // Limpa contagem e erros das camadas SIGEF ao trocar UF
+    this.layers
+      .filter((l) => l.wfsType === 'i3geo')
+      .forEach((l) => {
+        l.featureCount = 0
+        l.error = null
+      })
   },
 
   selectFeature(feature, layerId) {

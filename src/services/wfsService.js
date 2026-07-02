@@ -1,7 +1,10 @@
 /**
  * wfsService.js
  * Serviço de requisições WFS GetFeature.
- * Carrega features por BBOX dinâmico do viewport atual do mapa.
+ *
+ * Suporta dois tipos de servidor:
+ *   'geoserver' → GeoServer (CAR): WFS 2.0.0, typeNames, count, BBOX
+ *   'i3geo'     → i3geo/INCRA (SIGEF): WFS 1.1.0, tema+UF, typeName, maxFeatures
  */
 
 import m from 'mithril'
@@ -13,29 +16,69 @@ const activeRequests = {}
 /** Número máximo de features por requisição */
 const MAX_FEATURES = 500
 
+// ── Construtores de URL ───────────────────────────────────────────────────────
+
 /**
- * Monta a URL WFS GetFeature para uma camada e um BBOX.
- * @param {object} layer - Definição da camada (layerStore)
- * @param {string} bbox  - "minX,minY,maxX,maxY,EPSG:4326"
- * @returns {string}
+ * Monta URL WFS GetFeature para GeoServer (CAR).
+ * WFS 2.0.0 — parâmetros: typeNames (plural), count, BBOX sem SRS suffix.
  */
-export function buildWfsUrl(layer, bbox) {
+function buildGeoServerUrl(layer, bbox) {
   const params = new URLSearchParams({
     service: 'WFS',
     version: '2.0.0',
     request: 'GetFeature',
-    typeName: layer.typeName,
+    typeNames: layer.typeName,       // plural — WFS 2.0.0 padrão
     outputFormat: 'application/json',
     srsName: 'EPSG:4326',
     count: String(MAX_FEATURES),
-    BBOX: bbox,
+    BBOX: `${bbox},EPSG:4326`,
   })
   return `${layer.source.endpoint}?${params.toString()}`
 }
 
 /**
+ * Monta URL WFS GetFeature para i3geo (SIGEF).
+ * WFS 1.1.0 — parâmetros: tema={tema}_{UF}, typeName (igual ao tema), maxFeatures.
+ *
+ * O parâmetro `tema` DEVE ser o primeiro na query string para que o i3geo
+ * faça o roteamento correto antes de processar os demais parâmetros WFS.
+ */
+function buildI3GeoUrl(layer, bbox, uf) {
+  const temaCompleto = `${layer.tema}_${uf}`
+
+  // URLSearchParams preserva ordem de inserção — tema vai primeiro
+  const params = new URLSearchParams()
+  params.set('tema', temaCompleto)
+  params.set('service', 'WFS')
+  params.set('version', '1.1.0')
+  params.set('request', 'GetFeature')
+  params.set('typeName', temaCompleto)
+  params.set('outputFormat', 'application/json')
+  params.set('srsName', 'EPSG:4326')
+  params.set('maxFeatures', String(MAX_FEATURES))
+  params.set('BBOX', `${bbox},EPSG:4326`)
+
+  return `${layer.source.endpoint}?${params.toString()}`
+}
+
+/**
+ * Constrói a URL WFS adequada ao tipo de servidor da camada.
+ * @param {object} layer - Definição da camada
+ * @param {string} bbox  - "minLng,minLat,maxLng,maxLat"
+ * @param {string} uf    - UF para camadas SIGEF (ex: 'PA')
+ * @returns {string}
+ */
+export function buildWfsUrl(layer, bbox, uf = 'PA') {
+  if (layer.wfsType === 'i3geo') {
+    return buildI3GeoUrl(layer, bbox, uf)
+  }
+  return buildGeoServerUrl(layer, bbox)
+}
+
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+
+/**
  * Cancela uma requisição em andamento para uma camada.
- * @param {string} layerId
  */
 export function abortLayerRequest(layerId) {
   if (activeRequests[layerId]) {
@@ -46,19 +89,20 @@ export function abortLayerRequest(layerId) {
 
 /**
  * Busca features WFS de uma camada para o BBOX fornecido.
- * Retorna o GeoJSON ou null em caso de erro.
  * @param {object} layer
  * @param {maplibregl.LngLatBounds} bounds
- * @returns {Promise<object|null>}
+ * @param {string} uf  - UF para camadas SIGEF
+ * @returns {Promise<object|null>} GeoJSON FeatureCollection ou null
  */
-export async function fetchWfsFeatures(layer, bounds) {
-  // Cancela requisição anterior
+export async function fetchWfsFeatures(layer, bounds, uf = 'PA') {
   abortLayerRequest(layer.id)
 
   const sw = bounds.getSouthWest()
   const ne = bounds.getNorthEast()
-  const bbox = `${sw.lng},${sw.lat},${ne.lng},${ne.lat},EPSG:4326`
-  const url = buildWfsUrl(layer, bbox)
+  const bbox = `${sw.lng},${sw.lat},${ne.lng},${ne.lat}`
+  const url = buildWfsUrl(layer, bbox, uf)
+
+  console.debug(`[WFS] ${layer.id} → ${url}`)
 
   store.setLayerLoading(layer.id, true)
   store.setLayerError(layer.id, null)
@@ -70,17 +114,30 @@ export async function fetchWfsFeatures(layer, bounds) {
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json, text/plain, */*' },
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      const body = await response.text().catch(() => '')
+      throw new Error(`HTTP ${response.status}: ${response.statusText}${body ? ' — ' + body.slice(0, 120) : ''}`)
     }
 
-    const geojson = await response.json()
+    const text = await response.text()
+
+    // Verifica se a resposta não é HTML (erro de servidor disfarçado)
+    if (text.trimStart().startsWith('<')) {
+      throw new Error('Servidor retornou HTML em vez de GeoJSON. Verifique o TypeName ou tema.')
+    }
+
+    let geojson
+    try {
+      geojson = JSON.parse(text)
+    } catch {
+      throw new Error(`JSON inválido na resposta (${text.length} bytes): ${text.slice(0, 80)}`)
+    }
 
     if (!geojson || geojson.type !== 'FeatureCollection') {
-      throw new Error('Resposta inválida do servidor WFS')
+      throw new Error('Resposta não é um FeatureCollection GeoJSON válido')
     }
 
     store.setLayerFeatureCount(layer.id, geojson.features?.length ?? 0)
@@ -90,12 +147,9 @@ export async function fetchWfsFeatures(layer, bounds) {
     delete activeRequests[layer.id]
     return geojson
   } catch (err) {
-    if (err.name === 'AbortError') {
-      // Requisição cancelada intencionalmente — não é erro
-      return null
-    }
+    if (err.name === 'AbortError') return null
 
-    console.error(`[WFS] Erro ao carregar camada "${layer.label}":`, err)
+    console.error(`[WFS] Erro na camada "${layer.label}":`, err.message)
     store.setLayerError(layer.id, err.message)
     store.setLayerLoading(layer.id, false)
     m.redraw()
@@ -105,12 +159,10 @@ export async function fetchWfsFeatures(layer, bounds) {
   }
 }
 
+// ── Gerenciamento de fontes no mapa ───────────────────────────────────────────
+
 /**
- * Atualiza a fonte GeoJSON no mapa para uma camada.
- * Se a camada não existe no mapa ainda, adiciona source + layers.
- * @param {maplibregl.Map} map
- * @param {object} layer
- * @param {object|null} geojson
+ * Atualiza (ou cria) a fonte GeoJSON e as camadas de renderização no mapa.
  */
 export function updateMapLayer(map, layer, geojson) {
   const sourceId = layer.id
@@ -119,19 +171,13 @@ export function updateMapLayer(map, layer, geojson) {
 
   const data = geojson || { type: 'FeatureCollection', features: [] }
 
-  // ── Atualiza fonte existente ────────────────────────────────────────────
   if (map.getSource(sourceId)) {
     map.getSource(sourceId).setData(data)
     return
   }
 
-  // ── Adiciona nova fonte + camadas ───────────────────────────────────────
-  map.addSource(sourceId, {
-    type: 'geojson',
-    data,
-  })
+  map.addSource(sourceId, { type: 'geojson', data })
 
-  // Polígono preenchimento
   map.addLayer({
     id: fillLayerId,
     type: 'fill',
@@ -143,7 +189,6 @@ export function updateMapLayer(map, layer, geojson) {
     },
   })
 
-  // Borda
   map.addLayer({
     id: strokeLayerId,
     type: 'line',
@@ -158,10 +203,7 @@ export function updateMapLayer(map, layer, geojson) {
 }
 
 /**
- * Sincroniza visibilidade e opacidade de todas as camadas no mapa.
- * Chamado sempre que o store muda.
- * @param {maplibregl.Map} map
- * @param {object[]} layers
+ * Sincroniza visibilidade e estilos de todas as camadas no mapa.
  */
 export function syncLayerStyles(map, layers) {
   for (const layer of layers) {
