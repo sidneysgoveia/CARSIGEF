@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding="UTF-8" ?>
+<wfs:FeatureCollection
+   xmlns:ms="http://www.omsug.ca/osgis2004"
+   xmlns:gml="http://www.opengis.net/gml"
+   xmlns:wfs="http://www.opengis.net/wfs"
+   xmlns:ogc="http://www.opengis.net/ogc"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.omsug.ca/osgis2004 http://acervofundiario.incra.gov.br:80/i3geo/ogc.php?SERVICE=WFS&amp;VERSION=1.1.0&amp;REQUEST=DescribeFeatureType&amp;TYPENAME=imoveiscertificados_privado_PA&amp;OUTPUTFORMAT=text/xml;%20subtype=gml/3.1.1  http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">
+      <gml:boundedBy>
+      	<gml:Envelope srsName="EPSG:4326">
+      		<gml:lowerCorner>-3.997171 -47.494658</gml:lowerCorner>
+      		<gml:upperCorner>-3.810057 -47.300943</gml:upperCorner>
+      	</gml:Envelope>
+      </gml:boundedBy>
+    <gml:featureMember>
+      <ms:imoveiscertificados_privado_PA>
+        <gml:boundedBy>
+        	<gml:Envelope srsName="EPSG:4326">
+        		<gml:lowerCorner>-3.997171 -47.494658</gml:lowerCorner>
+        		<gml:upperCorner>-3.810057 -47.300943</gml:upperCorner>
+        	</gml:Envelope>
+        </gml:boundedBy>
+        <ms:msGeometry>
+          <gml:Polygon srsName="EPSG:4326">
+            <gml:exterior>
+              <gml:LinearRing>
+                <gml:posList srsDimension="2">-3.810057 -47.458031 -3.814989 -47.392021 -3.860021 -47.390797 -3.865180 -47.390658 -3.865518 -47.357014 -3.863412 -47.301257 -3.925428 -47.300943 -3.924874 -47.358522 -3.935329 -47.358299 -3.936085 -47.373481 -3.944977 -47.372947 -3.975569 -47.372271 -3.983014 -47.372119 -3.996287 -47.372159 -3.996258 -47.379266 -3.996350 -47.385149 -3.996334 -47.389844 -3.996325 -47.393618 -3.996452 -47.398614 -3.996591 -47.403177 -3.996584 -47.407845 -3.996645 -47.412173 -3.996676 -47.413646 -3.996704 -47.414753 -3.996742 -47.417042 -3.996774 -47.419240 -3.996874 -47.421721 -3.996970 -47.424373 -3.997046 -47.426364 -3.997171 -47.428365 -3.964121 -47.429320 -3.964643 -47.485987 -3.950616 -47.485703 -3.948856 -47.494658 -3.916822 -47.476165 -3.888017 -47.468001 -3.864962 -47.464305 -3.810057 -47.458031 </gml:posList>
+              </gml:LinearRing>
+            </gml:exterior>
+          </gml:Polygon>
+        </ms:msGeometry>
+        <ms:id1>4549</ms:id1>
+        <ms:num_processo>54100.001398/2006-04</ms:num_processo>
+        <ms:sr>01</ms:sr>
+        <ms:num_certificacao>010610000001-64</ms:num_certificacao>
+        <ms:data_certificacao>2006-10-18 00:00:00</ms:data_certificacao>
+        <ms:qtd_area_peca_tecnica>25016.0286</ms:qtd_area_peca_tecnica>
+        <ms:cod_profissional_credenciado>BV5</ms:cod_profissional_credenciado>
+        <ms:cod_imovel_rural>0510552602232</ms:cod_imovel_rural>
+        <ms:nome_imovel>FAZENDAS REUNIDAS LIGAÇÃO</ms:nome_imovel>
+      </ms:imoveiscertificados_privado_PA>
+    </gml:featureMember>
+</wfs:FeatureCollection>
+

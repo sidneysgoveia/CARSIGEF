@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
           target: 'https://geoserver.car.gov.br',
           changeOrigin: true,
           secure: true,
-          rewrite: (path) => path.replace(/^\/car-proxy/, '/geoserver/ows'),
+          rewrite: (path) => path.replace(/^\/car-proxy/, '/geoserver/sicar/ows'),
         },
         '/sigef-proxy': {
           target: 'https://acervofundiario.incra.gov.br',

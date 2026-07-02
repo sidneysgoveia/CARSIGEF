@@ -124,31 +124,6 @@ async function syncAndLoad(map) {
   }
 }
 
-/**
- * Inicializa descoberta de TypeNames do CAR via GetCapabilities.
- * Atualiza o store com TypeNames corretos e re-carrega as camadas.
- */
-async function initCARCapabilities(map) {
-  const endpoint = import.meta.env.VITE_CAR_ENDPOINT ?? '/car-proxy'
-  try {
-    const typeNames = await discoverCARTypeNames(endpoint)
-    store.availableCARTypeNames = typeNames
-
-    if (typeNames.length > 0) {
-      const matches = matchCARLayerTypeNames(typeNames)
-      if (matches.length > 0) {
-        matches.forEach(({ layerId, typeName }) => store.updateLayerTypeName(layerId, typeName))
-        console.info('[CAR] TypeNames auto-atualizados via GetCapabilities')
-      } else {
-        console.warn('[CAR] GetCapabilities retornou TypeNames, mas nenhum match encontrado. Usando nomes padrão.')
-        console.info('[CAR] TypeNames disponíveis no servidor:', typeNames)
-      }
-    }
-  } catch (err) {
-    console.warn('[CAR] initCARCapabilities falhou:', err.message)
-  }
-}
-
 export let mapInstance = null
 
 const MapView = {
@@ -170,10 +145,7 @@ const MapView = {
     )
     map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left')
 
-    map.on('load', async () => {
-      // 1. Descobre TypeNames corretos do CAR via GetCapabilities
-      await initCARCapabilities(map)
-      // 2. Carrega camadas visíveis com TypeNames (possivelmente atualizados)
+    map.on('load', () => {
       loadVisibleLayers(map)
     })
 
@@ -242,19 +214,20 @@ const MapView = {
       })
       m.redraw()
     }
-    // Recarrega apenas camadas SIGEF (chamado ao trocar UF no Sidebar)
-    window.__carsigefReloadSIGEF = async () => {
+    // Recarrega todas as camadas visíveis (chamado ao trocar UF no Sidebar)
+    window.__carsigefReloadUFLayers = async () => {
       if (map.getZoom() < WFS_MIN_ZOOM) return
       const bounds = map.getBounds()
       const uf = store.selectedUF
-      const sigefLayers = store.layers.filter((l) => l.wfsType === 'i3geo' && l.visible)
-      // Remove fontes antigas do SIGEF para forçar re-fetch
-      sigefLayers.forEach((layer) => {
+      const visibleLayers = store.layers.filter((l) => l.visible)
+      
+      // Remove fontes antigas para forçar re-fetch com a nova UF
+      visibleLayers.forEach((layer) => {
         const src = map.getSource(layer.id)
         if (src) src.setData({ type: 'FeatureCollection', features: [] })
       })
       await Promise.all(
-        sigefLayers.map(async (layer) => {
+        visibleLayers.map(async (layer) => {
           const geojson = await fetchWfsFeatures(layer, bounds, uf)
           if (geojson) updateMapLayer(map, layer, geojson)
         })

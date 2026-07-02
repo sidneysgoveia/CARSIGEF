@@ -103,7 +103,7 @@ const Sidebar = {
               value: selectedUF,
               onchange: (e) => {
                 store.setUF(e.target.value)
-                if (window.__carsigefReloadSIGEF) window.__carsigefReloadSIGEF()
+                if (window.__carsigefReloadUFLayers) window.__carsigefReloadUFLayers()
                 m.redraw()
               },
             },
@@ -113,9 +113,9 @@ const Sidebar = {
             ),
             m('button.sidebar__uf-reload-btn', {
               id: 'sigef-reload-btn',
-              title: 'Recarregar camadas SIGEF para esta UF',
+              title: 'Recarregar camadas para esta UF',
               onclick: () => {
-                if (window.__carsigefReloadSIGEF) window.__carsigefReloadSIGEF()
+                if (window.__carsigefReloadUFLayers) window.__carsigefReloadUFLayers()
               },
             }, '↺'),
           ]),
