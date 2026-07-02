@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/car-proxy",
+      "destination": "https://geoserver.car.gov.br/geoserver/sicar/ows"
+    },
+    {
+      "source": "/sigef-proxy",
+      "destination": "https://acervofundiario.incra.gov.br/i3geo/ogc.php"
+    }
+  ]
+}
