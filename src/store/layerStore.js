@@ -96,7 +96,7 @@ export const store = {
   selectedFeatureLayer: null,
   sidebarOpen: true,
   currentZoom: 4,
-  basemap: 'dark', // 'dark' | 'streets' | 'satellite'
+  basemap: 'terrain', // 'terrain' | 'streets' | 'satellite'
 
   /** UF selecionada para o SIGEF */
   selectedUF: 'PA',
