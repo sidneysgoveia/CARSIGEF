@@ -16,8 +16,8 @@ const groupCollapsed = {
 }
 
 const BASEMAP_OPTIONS = [
-  { key: 'dark', label: '🌑 Dark' },
-  { key: 'streets', label: '🗺 Streets' },
+  { key: 'terrain', label: '⛰️ Terreno' },
+  { key: 'streets', label: '🗺️ Ruas' },
   { key: 'satellite', label: '🛰 Satélite' },
 ]
 
