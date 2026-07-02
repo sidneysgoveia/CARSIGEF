@@ -1,0 +1,229 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   main.css — Design System CARSIGEF WebGIS
+   Dark mode + Glassmorphism + Tokens CSS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  /* Cores base */
+  --bg-base:        #07091a;
+  --bg-surface:     #0d1126;
+  --bg-elevated:    #111827;
+  --bg-glass:       rgba(13, 17, 38, 0.75);
+  --bg-glass-hover: rgba(20, 25, 55, 0.85);
+
+  /* Bordas */
+  --border-subtle:  rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-bright:  rgba(255, 255, 255, 0.18);
+
+  /* Texto */
+  --text-primary:   #f0f4ff;
+  --text-secondary: #8b96b8;
+  --text-muted:     #4a5578;
+  --text-inverse:   #07091a;
+
+  /* Accent CAR (verde) */
+  --car-500:   #22c55e;
+  --car-600:   #16a34a;
+  --car-300:   #86efac;
+  --car-glow:  rgba(34, 197, 94, 0.18);
+
+  /* Accent SIGEF (âmbar) */
+  --sigef-500: #f59e0b;
+  --sigef-600: #d97706;
+  --sigef-300: #fcd34d;
+  --sigef-glow: rgba(245, 158, 11, 0.18);
+
+  /* Accent primário (índigo) */
+  --primary-400: #818cf8;
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.20);
+
+  /* Status */
+  --error-500:   #ef4444;
+  --error-glow:  rgba(239, 68, 68, 0.15);
+  --warning-500: #f59e0b;
+  --success-500: #22c55e;
+
+  /* Dimensões */
+  --sidebar-width:    320px;
+  --toolbar-height:   56px;
+  --radius-sm:        6px;
+  --radius-md:        10px;
+  --radius-lg:        16px;
+  --radius-xl:        22px;
+  --radius-full:      9999px;
+
+  /* Blur */
+  --blur-sm:   8px;
+  --blur-md:   16px;
+  --blur-lg:   24px;
+
+  /* Sombras */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+  --shadow-lg:  0 12px 40px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-glow-car:   0 0 24px rgba(34,197,94,0.25);
+  --shadow-glow-sigef: 0 0 24px rgba(245,158,11,0.25);
+
+  /* Transições */
+  --ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Scrollbar estilizada */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-bright);
+  border-radius: var(--radius-full);
+}
+
+/* ── Layout raiz ────────────────────────────────────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── App root ───────────────────────────────────────────────────────────────── */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ── Map wrapper (relative, hosts popup) ─────────────────────────────────────── */
+.map-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ── Mapa ───────────────────────────────────────────────────────────────────── */
+#map-container {
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* Override MapLibre canvas styling */
+.maplibregl-canvas-container,
+.maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--bg-glass) !important;
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.maplibregl-ctrl-group button {
+  color: var(--text-primary) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: var(--bg-glass-hover) !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: var(--bg-glass) !important;
+  backdrop-filter: blur(var(--blur-sm));
+  color: var(--text-muted) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--text-secondary) !important;
+}
+
+.maplibregl-ctrl-scale {
+  background: var(--bg-glass) !important;
+  backdrop-filter: blur(var(--blur-sm));
+  color: var(--text-secondary) !important;
+  border-color: var(--border-bright) !important;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+/* ── Spinner global ─────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes slide-in-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

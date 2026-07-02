@@ -1,0 +1,8 @@
+# Normaliza line endings para LF no repositório (garante compatibilidade CI/CD)
+* text=auto eol=lf
+
+# Binários — sem conversão
+*.png binary
+*.jpg binary
+*.ico binary
+*.svg text eol=lf
