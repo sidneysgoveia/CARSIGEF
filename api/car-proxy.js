@@ -1,6 +1,6 @@
-const https = require('https');
+import https from 'https';
 
-module.exports = function handler(req, res) {
+export default function handler(req, res) {
   // Preserve query string
   const queryIndex = req.url.indexOf('?');
   const queryString = queryIndex !== -1 ? req.url.slice(queryIndex) : '';
@@ -23,4 +23,4 @@ module.exports = function handler(req, res) {
   }).on('error', (err) => {
     res.status(500).json({ error: err.message, url: targetUrl });
   });
-};
+}
