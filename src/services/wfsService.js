@@ -54,7 +54,7 @@ function buildI3GeoUrl(layer, bbox, uf) {
   params.set('typeName', temaCompleto)
   params.set('srsName', 'EPSG:4326')
   params.set('maxFeatures', String(MAX_FEATURES))
-  params.set('BBOX', `${bbox},EPSG:4326`)
+  params.set('BBOX', bbox)
 
   return `${layer.source.endpoint}?${params.toString()}`
 }

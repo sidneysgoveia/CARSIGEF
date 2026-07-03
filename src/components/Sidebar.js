@@ -66,6 +66,38 @@ const Sidebar = {
 
       m('.sidebar__divider'),
 
+      // ── Seletor de UF (Global) ───────────────────────────────────────────
+      m('.sidebar__section', [
+        m('.sidebar__uf-selector', [
+          m('label.sidebar__uf-label', { for: 'uf-select' }, '🗺 Estado (UF)'),
+          m('div.sidebar__uf-row', [
+            m('select.sidebar__uf-select', {
+              id: 'uf-select',
+              value: selectedUF,
+              onchange: (e) => {
+                store.setUF(e.target.value)
+                if (window.__carsigefReloadUFLayers) window.__carsigefReloadUFLayers()
+                m.redraw()
+              },
+            },
+              UF_LIST.map((uf) =>
+                m('option', { value: uf, selected: uf === selectedUF }, uf)
+              )
+            ),
+            m('button.sidebar__uf-reload-btn', {
+              id: 'uf-reload-btn',
+              title: 'Recarregar camadas para esta UF',
+              onclick: () => {
+                if (window.__carsigefReloadUFLayers) window.__carsigefReloadUFLayers()
+              },
+            }, '↺'),
+          ]),
+          m('p.sidebar__uf-hint', `Filtro base para WFS do CAR e SIGEF`),
+        ]),
+      ]),
+
+      m('.sidebar__divider'),
+
       // ── Camadas CAR ──────────────────────────────────────────────────────
       m('.sidebar__section', [
         m('.sidebar__group-header', {
@@ -94,33 +126,7 @@ const Sidebar = {
           m('span.sidebar__group-chevron', groupCollapsed.sigef ? '▶' : '▼'),
         ]),
 
-        // ── Seletor de UF (sempre visível quando grupo aberto) ────────────
-        !groupCollapsed.sigef && m('.sidebar__uf-selector', [
-          m('label.sidebar__uf-label', { for: 'sigef-uf-select' }, '🗺 Estado (UF)'),
-          m('div.sidebar__uf-row', [
-            m('select.sidebar__uf-select', {
-              id: 'sigef-uf-select',
-              value: selectedUF,
-              onchange: (e) => {
-                store.setUF(e.target.value)
-                if (window.__carsigefReloadUFLayers) window.__carsigefReloadUFLayers()
-                m.redraw()
-              },
-            },
-              UF_LIST.map((uf) =>
-                m('option', { value: uf, selected: uf === selectedUF }, uf)
-              )
-            ),
-            m('button.sidebar__uf-reload-btn', {
-              id: 'sigef-reload-btn',
-              title: 'Recarregar camadas para esta UF',
-              onclick: () => {
-                if (window.__carsigefReloadUFLayers) window.__carsigefReloadUFLayers()
-              },
-            }, '↺'),
-          ]),
-          m('p.sidebar__uf-hint', `tema: ${layers.find(l=>l.wfsType==='i3geo')?.tema ?? '…'}_${selectedUF}`),
-        ]),
+        // UF selector removido daqui
 
         !groupCollapsed.sigef &&
           m('.sidebar__layer-list',
