@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/car-proxy",
+      "destination": "/api/car-proxy"
+    },
+    {
       "source": "/sigef-proxy",
       "destination": "https://acervofundiario.incra.gov.br/i3geo/ogc.php"
     }
