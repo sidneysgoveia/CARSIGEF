@@ -617,9 +617,11 @@
 .feature-popup {
   position: absolute;
   right: 16px;
-  bottom: 40px;
-  width: 300px;
-  max-height: 50vh;
+  top: 80px;
+  width: 320px;
+  min-width: 250px;
+  min-height: 150px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   background: var(--bg-glass);
@@ -629,7 +631,8 @@
   box-shadow: var(--shadow-lg);
   z-index: 200;
   overflow: hidden;
-  animation: slide-in-up var(--duration-normal) var(--ease-spring);
+  resize: both;
+  animation: fade-in var(--duration-normal) var(--ease-spring);
 }
 
 .feature-popup__header {
@@ -697,7 +700,7 @@
   padding: 5px 14px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #cbd5e1;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   vertical-align: top;
@@ -708,7 +711,7 @@
 .feature-popup__val {
   padding: 5px 14px 5px 0;
   font-size: 12px;
-  color: var(--text-primary);
+  color: #f8fafc;
   word-break: break-word;
   vertical-align: top;
 }

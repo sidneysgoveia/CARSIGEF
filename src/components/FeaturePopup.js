@@ -19,6 +19,14 @@ function formatValue(val) {
 const SKIP_KEYS = new Set(['geometry', 'the_geom', 'geom', 'shape'])
 
 const FeaturePopup = {
+  pos: { x: 0, y: 0 },
+  start: { x: 0, y: 0 },
+  dragging: false,
+
+  oninit() {
+    FeaturePopup.pos = { x: 0, y: 0 }
+  },
+
   view() {
     const { selectedFeature, selectedFeatureLayer } = store
     if (!selectedFeature) return null
@@ -27,8 +35,34 @@ const FeaturePopup = {
     const props = selectedFeature.properties || {}
     const entries = Object.entries(props).filter(([k]) => !SKIP_KEYS.has(k.toLowerCase()))
 
-    return m('.feature-popup', [
-      m('.feature-popup__header', [
+    return m('.feature-popup', {
+      style: {
+        transform: `translate(${FeaturePopup.pos.x}px, ${FeaturePopup.pos.y}px)`,
+      }
+    }, [
+      m('.feature-popup__header', {
+        style: { cursor: 'move', userSelect: 'none' },
+        onmousedown: (e) => {
+          if (e.target.closest('#popup-close-btn')) return;
+          FeaturePopup.dragging = true;
+          FeaturePopup.start = { x: e.clientX - FeaturePopup.pos.x, y: e.clientY - FeaturePopup.pos.y };
+
+          const onmousemove = (ev) => {
+            if (!FeaturePopup.dragging) return;
+            FeaturePopup.pos = { x: ev.clientX - FeaturePopup.start.x, y: ev.clientY - FeaturePopup.start.y };
+            m.redraw();
+          };
+
+          const onmouseup = () => {
+            FeaturePopup.dragging = false;
+            document.removeEventListener('mousemove', onmousemove);
+            document.removeEventListener('mouseup', onmouseup);
+          };
+
+          document.addEventListener('mousemove', onmousemove);
+          document.addEventListener('mouseup', onmouseup);
+        }
+      }, [
         m('.feature-popup__source-badge', {
           style: { background: layer?.color ?? '#6366f1' },
         }, layer?.source.label ?? 'Feature'),
